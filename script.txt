@@ -1,0 +1,125 @@
+Sub TickerData()
+
+Dim x As Double 'row counter variable
+Dim y As Integer 'column counter variable
+Dim h As Integer 'output table row counter
+Dim k As Integer 'used to identify first row of new ticker (to get opening price)
+Dim ticker As String
+Dim openPrice As Single
+Dim closePrice As Single
+Dim totalVolume As Double   'variable to sum annual volume
+Dim ws As Worksheet
+Dim greatIncrease(1 To 4) As String '3 variables to identify greatest tickers for each category
+Dim greatDecrease(1 To 4) As String
+Dim greatVolume(1 To 4) As String
+'Dim greatIncreaseStock As String
+'Dim greatDecreaseStock As String
+'Dim greatVolumeStock As String
+Dim i As Integer ' loop counter
+
+
+For Each ws In Worksheets ' loop to run macro through all worksheets
+ws.Activate
+' first initializing variables
+x = 2
+y = 1
+h = 2
+k = 1
+
+'creating table headers
+Cells(1, 10).Value = "Ticker"
+Cells(1, 11).Value = "Yearly Change"
+Cells(1, 12).Value = "Percent Change"
+Cells(1, 13).Value = "Total Stock Volume"
+Cells(1, 17).Value = "Ticker"
+Cells(1, 18).Value = "Value"
+Cells(2, 16).Value = "Greatest % Increase"
+Cells(3, 16).Value = "Greatest % Decrease"
+Cells(4, 16).Value = "Greatest Total Volume"
+
+ticker = Cells(2, 1).Value
+Do While Cells(x, 1).Value <> 0
+    totalVolume = totalVolume + Cells(x, 7).Value
+    If k = 1 Then
+        openPrice = Cells(x, 3).Value
+        k = 2
+    End If
+    If Cells(x + 1, 1).Value <> ticker Then
+        Cells(h, 10).Value = ticker
+        ticker = Cells(x + 1, 1).Value
+        closePrice = Cells(x, 6).Value
+        Cells(h, 11).Value = closePrice - openPrice 'delta change output
+        If openPrice = 0 Then   'if statement added to avoid dividing by 0 error for PLNT
+            Cells(h, 12).Value = 0
+        Else
+            Cells(h, 12).Value = Cells(h, 11).Value / openPrice
+        End If
+        Cells(h, 12).NumberFormat = "0.00%"
+        If Cells(h, 11).Value > 0 Then  'conditional formatting if else statement
+            Cells(h, 11).Interior.ColorIndex = 4
+        ElseIf Cells(h, 11).Value < 0 Then
+            Cells(h, 11).Interior.ColorIndex = 3
+        End If
+        Cells(h, 13).Value = totalVolume
+        totalVolume = 0
+        h = h + 1
+        k = 1
+    End If
+    x = x + 1
+Loop
+
+'bonus loop to identify greatest x
+x = 2
+y = 1
+h = 2
+k = 1
+For i = 1 To 4  'initializing arrays w first ticker data
+    greatIncrease(i) = Cells(2, 9 + i).Value
+    greatDecrease(i) = Cells(2, 9 + i).Value
+    greatVolume(i) = Cells(2, 9 + i).Value
+Next
+
+i = 1
+
+Do While Cells(x, 10).Value <> 0
+    If Cells(x + 1, 12).Value > CDbl(greatIncrease(3)) Then
+        For i = 1 To 4
+            greatIncrease(i) = Cells(x + 1, 9 + i).Value
+        Next
+    End If
+    If Cells(x + 1, 12).Value < CDbl(greatDecrease(3)) Then
+        For i = 1 To 4
+            greatDecrease(i) = Cells(x + 1, 9 + i).Value
+        Next
+    End If
+    If Cells(x + 1, 13).Value > CDbl(greatVolume(4)) Then
+        For i = 1 To 4
+            greatVolume(i) = Cells(x + 1, 9 + i).Value
+        Next
+    End If
+    If Cells(x + 2, 10).Value = 0 Then
+        Exit Do
+    End If
+    If x = 130 Then
+        y = 2
+    End If
+    x = x + 1
+Loop
+
+Cells(2, 17).Value = greatIncrease(1)
+Cells(2, 18).Value = greatIncrease(3)
+Cells(2, 18).NumberFormat = "0.00%"
+
+Cells(3, 17).Value = greatDecrease(1)
+Cells(3, 18).Value = greatDecrease(3)
+Cells(3, 18).NumberFormat = "0.00%"
+
+
+Cells(4, 17).Value = greatVolume(1)
+Cells(4, 18).Value = greatVolume(4)
+
+Next
+
+
+
+End Sub
